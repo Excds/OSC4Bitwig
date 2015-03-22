@@ -7,9 +7,10 @@ OSCWriter.FXPARAM_ATTRIBS = [ "name", "valueStr", "value" ];
 
 function OSCWriter (model, oscHost, oscPort)
 {
+    this.oscHost = oscHost
     this.oscPort = oscPort;
     this.model   = model;
-    
+
     this.oldValues = {};
     this.messages = [];
 }
@@ -37,7 +38,7 @@ OSCWriter.prototype.flush = function (dump)
     //
     // Frames
     //
-    
+
     var app = this.model.getApplication ();
     this.sendOSC ('/layout', app.getPanelLayout ().toLowerCase (), dump);
 
@@ -57,11 +58,11 @@ OSCWriter.prototype.flush = function (dump)
     this.sendOSC ('/mixer/sendsSectionVisibility', mix.isSendSectionVisible () ? 1 : 0, dump);
     this.sendOSC ('/mixer/ioSectionVisibility', mix.isIoSectionVisible () ? 1 : 0, dump);
     this.sendOSC ('/mixer/meterSectionVisibility', mix.isMeterSectionVisible () ? 1 : 0, dump);
-    
+
     //
     // Master-/Track(-commands)
     //
-    
+
 	var tb = this.model.getTrackBank ();
 	for (var i = 0; i < tb.numTracks; i++)
         this.flushTrack ('/track/' + (i + 1) + '/', tb.getTrack (i), dump);
@@ -108,11 +109,11 @@ OSCWriter.prototype.flush = function (dump)
     this.sendOSC ('/primary/category', cd.categoryProvider.selectedItemVerbose, dump);
     this.sendOSC ('/primary/creator', cd.creatorProvider.selectedItemVerbose, dump);
     this.sendOSC ('/primary/preset', cd.presetProvider.selectedItemVerbose, dump);
-    
+
     //
     // User
     //
-    
+
     var user = this.model.getUserControlBank ();
 	for (var i = 0; i < cd.numParams; i++)
         this.flushFX ('/user/param/' + (i + 1) + '/', user.getUserParam (i), dump);
@@ -122,9 +123,9 @@ OSCWriter.prototype.flush = function (dump)
         this.messages = [];
         return;
 	}
-    
+
     while (msg = this.messages.shift ())
-        host.sendDatagramPacket (Config.sendHost, Config.sendPort, msg);
+        host.sendDatagramPacket (this.oscHost, this.oscPort, msg);
 };
 
 OSCWriter.prototype.flushTrack = function (trackAddress, track, dump)
@@ -144,7 +145,7 @@ OSCWriter.prototype.flushTrack = function (trackAddress, track, dump)
                         this.sendOSC (trackAddress + 'send/' + (j + 1) + '/' + q, s[q], dump);
                 }
                 break;
-                
+
             case 'slots':
                 if (!track.slots)
                     continue;
@@ -168,19 +169,19 @@ OSCWriter.prototype.flushTrack = function (trackAddress, track, dump)
                     }
                 }
                 break;
-                
+
             case 'color':
                 var color = AbstractTrackBankProxy.getColorEntry (track[p]);
                 if (color)
                     this.sendOSCColor (trackAddress + p, color[0], color[1], color[2], dump);
                 break;
-                
+
             case 'crossfadeMode':
                 this.sendOSC (trackAddress + p + '/A', track[p] == 'A', dump);
                 this.sendOSC (trackAddress + p + '/B', track[p] == 'B', dump);
                 this.sendOSC (trackAddress + p + '/AB', track[p] == 'AB', dump);
                 break;
-                
+
             default:
                 this.sendOSC (trackAddress + p, track[p], dump);
                 break;

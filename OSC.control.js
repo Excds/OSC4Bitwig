@@ -15,10 +15,10 @@ var model = null;
 var parser = null;
 var writer = null;
 
-String.prototype.getBytes = function () 
+String.prototype.getBytes = function ()
 {
 	var bytes = [];
-	for (var i = 0; i < this.length; i++) 
+	for (var i = 0; i < this.length; i++)
 		bytes.push (this.charCodeAt(i));
 	return bytes;
 };
@@ -32,7 +32,7 @@ function init ()
 	model = new Model (70, scales, 8, 8, 8);
 
 	parser = new OSCParser (model, Config.receiveHost, Config.receivePort);
-    writer = new OSCWriter (model);
+    writer = new OSCWriter (model, Config.sendHost, Config.sendPort);
 
     scheduleTask (function ()
     {
